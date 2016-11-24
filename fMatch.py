@@ -29,50 +29,72 @@ def CmList(fi,fjList):
 	it = 0
 
 	for fj in fjList:
-		# calculate optical flow
-		p1, st, err = cv2.calcOpticalFlowPyrLK(fi, fj, p0, None, **lk_params)
-		good_new = p1[st==1]
-		good_old = p0[st==1]
 
-		h, status = cv2.findHomography(good_old, good_new)
-		
-		Cm = 0.0
+		# calculate optical flow and
+		# Try to find homography
+		try:
+			p1, st, err = cv2.calcOpticalFlowPyrLK(fi, fj, p0, None, **lk_params)
+			good_new = p1[st==1]
+			good_old = p0[st==1]
+			# print good_old
+			if len(good_old) > 10:
+				h, status = cv2.findHomography(good_old, good_new)
+				
+				Cm = 0.0
 
-		pt1 = np.ones([3,1])
-		pt2 = np.ones([3,1])
-		pt1 = np.asmatrix(pt1)
-		pt2 = np.asmatrix(pt2)
-		
-		for x in xrange(0,good_old.shape[0]):
-			pt1[0,0] = good_old[x,0]
-			pt1[1,0] = good_old[x,1]
-			pt1[2,0] = 1
+				pt1 = np.ones([3,1])
+				pt2 = np.ones([3,1])
+				pt1 = np.asmatrix(pt1)
+				pt2 = np.asmatrix(pt2)
+				
+				for x in xrange(0,good_old.shape[0]):
+					pt1[0,0] = good_old[x,0]
+					pt1[1,0] = good_old[x,1]
+					pt1[2,0] = 1
 
-			pt1 = np.mat(h)*pt1
+					pt1 = np.mat(h)*pt1
+					pt1[0,0] /= pt1[2,0]
+					pt1[1,0] /= pt1[2,0]
+					pt1[2,0] = 1
 
-			pt2[0,0] = good_new[x,0]
-			pt2[1,0] = good_new[x,1]
-			pt2[2,0] = 1
 
-			Cm += np.linalg.norm(pt2-pt1)
+					pt2[0,0] = good_new[x,0]
+					pt2[1,0] = good_new[x,1]
+					pt2[2,0] = 1
 
-		Cm /= good_old.shape[0]
-		
-		pt1[0,0] = good_old.shape[0]/2
-		pt1[1,0] = good_old.shape[1]/2
-		pt1[2,0] = 1
-		
-		pt2 = np.mat(h)*pt1
+					Cm += np.linalg.norm(pt2-pt1)
 
-		C0 = np.linalg.norm(pt2-pt1)
-		
-		# print Cm , C0 , tc , gamma
+				Cm /= good_old.shape[0]
+				
+				pt1[0,0] = fi.shape[1]/2
+				pt1[1,0] = fi.shape[0]/2
+				pt1[2,0] = 1
+				
+				pt2 = np.mat(h)*pt1
+				pt2[0,0] /= pt2[2,0]
+				pt2[1,0] /= pt2[2,0]
+				pt2[2,0] = 1
+				
+				C0 = np.linalg.norm(pt2-pt1)
+				
+				# print Cm , C0 , tc , gamma
 
-		if Cm < tc:
-			motionCostArr[it] = C0
-		else:
+				if Cm < tc:
+					motionCostArr[it] = C0
+				else:
+					motionCostArr[it] = gamma
+			else:
+				motionCostArr[it] = gamma	
+
+			it += 1
+
+		#Exception if homography not found
+		except Exception, e:
 			motionCostArr[it] = gamma
-		it += 1
+			it += 1
+
+
+	# print motionCostArr[0]
 
 	return motionCostArr
 

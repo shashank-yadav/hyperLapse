@@ -1,14 +1,18 @@
 from fMatch import *
 
-w = 10
-g = 10
-v = 4
-batchSize = 100
+w = 25
+g = 25
+v = 16
+batchSize = 200
 lamdaS = 10
 lamdaA = 10
 
+inputFile = 'videoplayback.mp4'
+# inputFile = 'roadedge0.mp4'
+# inputFile = 'run.mp4'
+outptFile = 'Hyperlapse' + inputFile.split('.')[0] + '.avi'
 # cap = cv2.VideoCapture("test.mp4")
-cap = cv2.VideoCapture("roadedge0.mp4")
+cap = cv2.VideoCapture(inputFile)
 ret, frame = cap.read()
 temporalNeighbors = np.zeros([batchSize,frame.shape[0],frame.shape[1]],dtype = np.uint8)
 fCount = 0
@@ -32,6 +36,7 @@ while ret:
 	temporalNeighbors[it,:,:] = frame
 	it += 1
 	ret, frame = cap.read()
+	print fCount
 	fCount += 1
 
 motionCostArr = np.zeros(w)
@@ -86,13 +91,13 @@ while s > g:
 
 p.reverse()
 
-cap = cv2.VideoCapture("roadedge0.mp4")
+cap = cv2.VideoCapture(inputFile)
 ret, frame = cap.read()
 fCount = 0
 it = 0
 fourcc = cv2.cv.CV_FOURCC(*'XVID')
 size = (frame.shape[1], frame.shape[0])
-vid = cv2.VideoWriter("hyperLapse.avi", fourcc, 10 , size, True)
+vid = cv2.VideoWriter(outptFile, fourcc, 10 , size, True)
 
 
 while ret and it < len(p): 
