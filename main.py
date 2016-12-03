@@ -1,16 +1,19 @@
 from fMatch import *
+import sys
 
 w = 25
 g = 25
-v = 16
+v = int(sys.argv[2])#16
 batchSize = 200
-lamdaS = 10
-lamdaA = 10
+lamdaS = 200
+lamdaA = 80
+bss = 3
 
-inputFile = 'videoplayback.mp4'
+inputFile = str(sys.argv[1])
 # inputFile = 'roadedge0.mp4'
 # inputFile = 'run.mp4'
-outptFile = 'Hyperlapse' + inputFile.split('.')[0] + '.avi'
+# outptFile = 'Hyperlapse' + inputFile.split('.')[0] + '.avi'
+outptFile = 'naiveHyperLapse' + inputFile.split('.')[0] + '_' + str(v) + '.avi'
 # cap = cv2.VideoCapture("test.mp4")
 cap = cv2.VideoCapture(inputFile)
 ret, frame = cap.read()
@@ -35,7 +38,11 @@ while ret:
 
 	temporalNeighbors[it,:,:] = frame
 	it += 1
-	ret, frame = cap.read()
+	temp = 0
+	ret,frame = cap.read()
+	while temp < bss and ret == False:
+		ret,frame = cap.read()
+		temp += 1
 	print fCount
 	fCount += 1
 
@@ -96,15 +103,20 @@ ret, frame = cap.read()
 fCount = 0
 it = 0
 fourcc = cv2.cv.CV_FOURCC(*'XVID')
+# fourcc = cv2.VideoWriter_fourcc(*'XVID')
 size = (frame.shape[1], frame.shape[0])
-vid = cv2.VideoWriter(outptFile, fourcc, 10 , size, True)
+vid = cv2.VideoWriter(outptFile, fourcc, 30 , size, True)
 
 
 while ret and it < len(p): 
 	if fCount == p[it]:
 		vid.write(frame)
 		it += 1
+	temp = 0
 	ret,frame = cap.read()
+	while temp < bss and ret == False:
+		ret,frame = cap.read()
+		temp += 1
 	print fCount
 	fCount += 1
 
